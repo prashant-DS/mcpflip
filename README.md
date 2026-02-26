@@ -23,10 +23,15 @@ session start     → 3 gateway tools in context, all servers pre-warmed silentl
 
 ## Install
 
+**Option 1 — curl (no clone needed):**
 ```bash
-git clone https://github.com/pk8873444412/mcpflip.git
-cd mcpflip
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/mcpflip/main/install-remote.sh | bash
+```
+
+**Option 2 — clone:**
+```bash
+git clone https://github.com/YOUR_USERNAME/mcpflip.git
+cd mcpflip && ./install.sh
 ```
 
 Then restart Claude Code.
@@ -68,7 +73,8 @@ Restart Claude Code after any changes to this file.
 | `gateway.js` | MCP server — the gateway engine |
 | `servers.json` | Default server config (example only) |
 | `SKILL.md` | Claude Code skill for `/mcpflip` commands |
-| `install.sh` | One-command installer |
+| `install.sh` | Install from local clone |
+| `install-remote.sh` | Install via curl (no clone needed) |
 
 ## Requirements
 
