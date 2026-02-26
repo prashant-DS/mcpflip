@@ -72,7 +72,7 @@ Restart Claude Code after any changes to this file.
 |---|---|
 | `gateway.js` | MCP server — the gateway engine |
 | `servers.json` | Default server config (example only) |
-| `SKILL.md` | Claude Code skill for `/mcpflip` commands |
+| `SKILL.md` | Claude Code skill for `/mcpflip` commands — uses `disable-model-invocation: true` so Claude never auto-triggers these commands without explicit user intent |
 | `install.sh` | Install from local clone |
 | `install-remote.sh` | Install via curl (no clone needed) |
 
