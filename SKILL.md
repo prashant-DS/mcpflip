@@ -19,6 +19,7 @@ Parse the first word after `/mcpflip` as the subcommand:
 | `status` | Show all servers and their state |
 | `add` | Add a new server to the gateway |
 | `setup` | Migrate Claude Code MCPs into the gateway |
+| `uninstall` | Remove mcpflip completely |
 | `help` | Show command reference |
 | *(nothing)* | Show help |
 | *(unrecognized)* | Say "Unknown command. Run /mcpflip help to see available commands." |
@@ -41,7 +42,7 @@ Parse the first word after `/mcpflip` as the subcommand:
 
 3. **Match the name** (case-insensitive, partial match):
    - Exact match → use it
-   - One partial match (e.g., `c` → `chrome`) → use it, confirm: "Activating chrome..."
+   - One partial match → use it, confirm: "Activating {resolved alias}..."
    - Multiple partial matches → ask: "Did you mean: [list]? Please specify."
    - No match → say: "No server found matching '{name}'. Available: [list from status]"
 
@@ -101,13 +102,6 @@ Parse the first word after `/mcpflip` as the subcommand:
 
 **Input:** `/mcpflip add <alias> -- <command> [args...]`
 
-**Examples:**
-```
-/mcpflip add github -- npx -y @modelcontextprotocol/server-github
-/mcpflip add linear -- npx -y linear-mcp
-/mcpflip add postgres -- npx -y @modelcontextprotocol/server-postgres postgresql://localhost/mydb
-```
-
 **Steps:**
 
 1. **Parse the input:**
@@ -150,18 +144,38 @@ Parse the first word after `/mcpflip` as the subcommand:
 2. **Read `~/.claude/mcpflip/servers.json`**
 
 3. **Find MCPs not yet in servers.json** (compare by command+args, not just name)
+   - **Always skip the `mcpflip` entry** — it's the gateway itself, not a server to migrate
 
 4. **If none found** → say: "All your Claude Code MCPs are already in the gateway, or you have none configured."
 
-5. **Show the list** of MCPs available to migrate:
+5. **Show the list** of MCPs available to migrate, with a clear explanation:
    ```
-   Found X MCP servers in Claude Code config not yet in mcpflip:
-   - github (npx -y @modelcontextprotocol/server-github)
-   - linear (npx -y linear-mcp)
-   ```
+   Found X MCP servers in your Claude Code config:
 
-6. **Ask:** "Which would you like to migrate? Reply with: all, none, or specific names (comma separated)."
+     1. <alias>   (<command> <args>)
+     2. <alias>   (<command> <args>)
+     ...
+
+   Migrating a server moves it into mcpflip — tools only appear in context
+   when you explicitly run /mcpflip activate <name>.
+
+   Servers you don't migrate stay in Claude Code's native config and will
+   always be loaded into context at session startup.
+
+   Which would you like to migrate?
+     - Type "all" to migrate everything
+     - Type "none" to keep everything as-is
+     - Type names separated by commas to pick specific ones
+   ```
+   - Populate the list from actual entries read in step 1 — never hardcode names
    - Wait for user response before proceeding
+
+6. **Parse the response:**
+   - `all` → select every server in the list
+   - `none` → stop: "No changes made."
+   - comma-separated names → match each against the list (case-insensitive)
+     - Unrecognised name → warn: "'{name}' not found in the list — skipping."
+   - Empty response → ask again
 
 7. **For each selected server:**
    - Add to servers.json with its alias and command
@@ -171,6 +185,53 @@ Parse the first word after `/mcpflip` as the subcommand:
 8. **Write updated servers.json**
 
 9. **Report:** "Migrated X servers. Restart your Claude Code session to apply changes."
+
+---
+
+## uninstall
+
+**Purpose:** Remove mcpflip completely from the system.
+
+**Input:** `/mcpflip uninstall`
+
+**Steps:**
+
+1. **Read `~/.claude/mcpflip/servers.json`**
+   - If it has entries, list them and ask:
+     ```
+     Found X servers in your mcpflip config:
+       - <alias>  (<command> <args>)
+       - <alias>  (<command> <args>)
+       ...
+
+     Migrate these back to Claude Code's native MCP config before uninstalling?
+     (If no, they will be permanently deleted with mcpflip.)
+     ```
+   - Populate the list from actual entries in servers.json — never hardcode names
+   - Wait for user response before proceeding
+   - If yes → for each entry run: `claude mcp add -s user <alias> -- <command> [args...]`
+     - If any add fails → warn: "Could not restore '{alias}' — you may need to add it manually."
+   - If no → proceed without migrating
+   - If servers.json is empty → skip this step
+
+2. **Show what will be removed and ask for confirmation:**
+   ```
+   This will permanently remove:
+     - mcpflip from Claude Code's MCP registry
+     - ~/.claude/mcpflip/  (gateway.js, SKILL.md, servers.json)
+     - ~/.claude/skills/mcpflip/  (skill symlink)
+
+   Proceed? (yes/no)
+   ```
+   - Do not proceed until user confirms with "yes"
+   - Any other response → say "Uninstall cancelled." and stop
+
+3. **Run the following in order:**
+   - `claude mcp remove mcpflip -s user`
+   - `rm -rf ~/.claude/mcpflip`
+   - `rm -rf ~/.claude/skills/mcpflip`
+
+4. **Report:** "mcpflip uninstalled. Restart Claude Code to complete removal."
 
 ---
 
@@ -189,12 +250,13 @@ Commands:
   /mcpflip status                               Show all servers and their state
   /mcpflip add <alias> -- <command> [args]      Add a new server to the gateway
   /mcpflip setup                                Migrate Claude Code MCPs into gateway
+  /mcpflip uninstall                            Remove mcpflip completely
   /mcpflip help                                 Show this reference
 
 Examples:
-  /mcpflip activate chrome
-  /mcpflip deactivate chrome
-  /mcpflip add github -- npx -y @modelcontextprotocol/server-github
+  /mcpflip activate <name>
+  /mcpflip deactivate <name>
+  /mcpflip add <alias> -- <command> [args]
   /mcpflip setup
 
 servers.json: ~/.claude/mcpflip/servers.json

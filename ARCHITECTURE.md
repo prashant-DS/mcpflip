@@ -36,11 +36,11 @@ mcpflip sits between Claude Code and all your MCP servers as a **multiplexing ga
 │  │                    Server Manager                            │   │
 │  │                                                              │   │
 │  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐       │   │
-│  │  │ chrome  │  │ github  │  │ linear  │  │  ...    │       │   │
+│  │  │server-a │  │server-b │  │server-c │  │  ...    │       │   │
 │  │  │         │  │         │  │         │  │         │       │   │
 │  │  │ state:  │  │ state:  │  │ state:  │  │ state:  │       │   │
 │  │  │ ready   │  │ active  │  │ error   │  │ warming │       │   │
-│  │  │ 26 tools│  │ 15 tools│  │ 0 tools │  │ 0 tools │       │   │
+│  │  │ N tools │  │ N tools │  │ 0 tools │  │ 0 tools │       │   │
 │  │  └────┬────┘  └────┬────┘  └─────────┘  └─────────┘       │   │
 │  │       │            │                                        │   │
 │  └───────┼────────────┼────────────────────────────────────────┘   │
@@ -49,7 +49,7 @@ mcpflip sits between Claude Code and all your MCP servers as a **multiplexing ga
      stdio │      stdio │     (each server is a child process)
            │            │
      ┌─────▼─────┐ ┌────▼──────┐
-     │ chrome    │ │ github    │
+     │ server-a  │ │ server-b  │
      │ MCP       │ │ MCP       │
      │ server    │ │ server    │
      └───────────┘ └───────────┘
@@ -120,7 +120,7 @@ Each server in `servers.json` goes through these states:
 ### Startup — Pre-warming
 
 ```
-gateway.js                     chrome MCP server
+gateway.js                     <server> MCP process
     │                                │
     │──── spawn process ────────────▶│
     │                                │
@@ -144,15 +144,15 @@ All servers pre-warm concurrently via `Promise.allSettled`. Failures are caught 
 ```
 Claude Code              gateway.js
     │                        │
-    │── tools/call ─────────▶│  { name: "gateway_activate", arguments: { name: "chrome" } }
+    │── tools/call ─────────▶│  { name: "gateway_activate", arguments: { name: "<server>" } }
     │                        │
-    │                        │  1. Set chrome.active = true
-    │                        │  2. Rebuild activeTools = GATEWAY_TOOLS + chrome.tools
+    │                        │  1. Set <server>.active = true
+    │                        │  2. Rebuild activeTools = GATEWAY_TOOLS + <server>.tools
     │                        │  3. Send notification ─────────▶ (back to Claude Code)
     │◀── notification ───────│  { method: "notifications/tools/list_changed" }
     │                        │
     │── tools/list ─────────▶│  (Claude Code re-fetches tool list)
-    │◀── result ─────────────│  { tools: [3 gateway + 26 chrome tools] }
+    │◀── result ─────────────│  { tools: [3 gateway + N <server> tools] }
     │                        │
     │  Claude now sees 29 tools
 ```
@@ -162,16 +162,16 @@ The `notifications/tools/list_changed` notification triggers Claude Code to re-c
 ### Tool Proxy — Calling an Activated Server's Tool
 
 ```
-Claude Code              gateway.js                 chrome MCP server
+Claude Code              gateway.js                 <server> MCP process
     │                        │                             │
     │── tools/call ─────────▶│                             │
-    │   { name: "chrome_    ││                             │
-    │     navigate" }        ││  1. Not a gateway_* tool   │
-    │                        ││  2. Find: chrome.tools     │
-    │                        ││     has "chrome_navigate"   │
+    │   { name: "<server>_  ││                             │
+    │     tool_name" }       ││  1. Not a gateway_* tool   │
+    │                        ││  2. Find: <server>.tools   │
+    │                        ││     has "<server>_tool"     │
     │                        ││                             │
     │                        │── tools/call ──────────────▶│
-    │                        │   { name: "chrome_navigate" }│
+    │                        │   { name: "<server>_tool" } │
     │                        │◀── result ─────────────────│
     │                        │                             │
     │◀── result ─────────────│  (forwarded unchanged)
@@ -184,9 +184,9 @@ The gateway acts as a transparent proxy. Claude Code never knows it's talking to
 ```
 Claude Code              gateway.js
     │                        │
-    │── tools/call ─────────▶│  { name: "gateway_deactivate", arguments: { name: "chrome" } }
+    │── tools/call ─────────▶│  { name: "gateway_deactivate", arguments: { name: "<server>" } }
     │                        │
-    │                        │  1. Set chrome.active = false
+    │                        │  1. Set <server>.active = false
     │                        │  2. Rebuild activeTools = GATEWAY_TOOLS only
     │                        │  3. Send notifications/tools/list_changed
     │◀── notification ───────│
@@ -319,15 +319,15 @@ The SKILL.md file is a Claude Code skill — a structured prompt that teaches Cl
 4. Format responses consistently
 
 ```
-User types:           /mcpflip activate chrome
+User types:           /mcpflip activate <name>
                            │
 Claude Code reads:    SKILL.md (the skill prompt)
                            │
-Claude decides:       Call gateway_activate({ name: "chrome" })
+Claude decides:       Call gateway_activate({ name: "<name>" })
                            │
-gateway.js handles:   activate("chrome") → sets active, sends list_changed
+gateway.js handles:   activate("<name>") → sets active, sends list_changed
                            │
-Claude Code:          Re-fetches tools/list → sees chrome tools
+Claude Code:          Re-fetches tools/list → sees <name> tools
 ```
 
 The skill adds **intelligence on top of the gateway** — partial matching, status checks before activating, user confirmations for destructive actions — while the gateway itself stays a simple, deterministic JSON-RPC router.
@@ -339,9 +339,9 @@ The skill adds **intelligence on top of the gateway** — partial matching, stat
 ```
 Claude Code (parent)
   └── node gateway.js          ← single registered MCP server
-        ├── npx chrome-devtools-mcp    ← child: pre-warmed
-        ├── npx @mcp/server-github     ← child: pre-warmed
-        └── npx linear-mcp            ← child: pre-warmed
+        ├── <command> <args>   ← child: pre-warmed
+        ├── <command> <args>   ← child: pre-warmed
+        └── <command> <args>   ← child: pre-warmed
 ```
 
 On `SIGTERM` / `SIGINT`, the gateway kills all children before exiting. If a child crashes on its own, its state moves to `error` and `notifications/tools/list_changed` is sent so Claude Code drops its tools from context.

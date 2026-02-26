@@ -16,9 +16,9 @@ Every MCP server registered with Claude Code injects its full tool list into con
 - Deactivate when done → context is clean again, server stays warm for instant re-activation
 
 ```
-session start     → 3 gateway tools in context, all servers pre-warmed silently
-/mcpflip activate chrome   → 26 native chrome tools injected instantly
-/mcpflip deactivate chrome → tools removed, context clean
+session start               → 3 gateway tools in context, all servers pre-warmed silently
+/mcpflip activate <name>    → server tools injected instantly
+/mcpflip deactivate <name>  → tools removed, context clean
 ```
 
 ## Install
@@ -40,17 +40,15 @@ Then restart Claude Code.
 
 ## Configure your servers
 
-Edit `~/.claude/mcpflip/servers.json`:
+Use `/mcpflip setup` to migrate your existing Claude Code MCPs, or `/mcpflip add` to add new ones.
+
+`~/.claude/mcpflip/servers.json` format:
 
 ```json
 {
-  "chrome": {
-    "command": "npx",
-    "args": ["-y", "chrome-devtools-mcp@latest"]
-  },
-  "github": {
-    "command": "npx",
-    "args": ["-y", "@modelcontextprotocol/server-github"]
+  "<alias>": {
+    "command": "<executable>",
+    "args": ["<arg1>", "<arg2>"]
   }
 }
 ```
@@ -66,6 +64,7 @@ Restart Claude Code after any changes to this file.
 | `/mcpflip status`                          | Show all servers and their state  |
 | `/mcpflip add <alias> -- <command> [args]` | Add a new server                  |
 | `/mcpflip setup`                           | Migrate existing Claude Code MCPs |
+| `/mcpflip uninstall`                       | Remove mcpflip completely         |
 | `/mcpflip help`                            | Show command reference            |
 
 ## Files
