@@ -25,12 +25,12 @@ session start     → 3 gateway tools in context, all servers pre-warmed silentl
 
 **Option 1 — curl (no clone needed):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/mcpflip/main/install-remote.sh | bash
+curl -fsSL https://raw.githubusercontent.com/prashant-DS/mcpflip/main/install-remote.sh | bash
 ```
 
 **Option 2 — clone:**
 ```bash
-git clone https://github.com/YOUR_USERNAME/mcpflip.git
+git clone https://github.com/prashant-DS/mcpflip.git
 cd mcpflip && ./install.sh
 ```
 

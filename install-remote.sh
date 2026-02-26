@@ -2,7 +2,7 @@
 set -e
 
 # Set this to your repo's raw base URL after publishing
-REPO="https://raw.githubusercontent.com/YOUR_USERNAME/mcpflip/main"
+REPO="https://raw.githubusercontent.com/prashant-DS/mcpflip/main"
 
 INSTALL_DIR="$HOME/.claude/mcpflip"
 SKILL_DIR="$HOME/.claude/skills/mcpflip"
