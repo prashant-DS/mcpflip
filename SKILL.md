@@ -43,7 +43,9 @@ Parse the first word after `/mcpflip` as the subcommand:
 3. **Match the name** (case-insensitive, partial match):
    - Exact match → use it
    - One partial match → use it, confirm: "Activating {resolved alias}..."
-   - Multiple partial matches → ask: "Did you mean: [list]? Please specify."
+   - Multiple partial matches → use `AskUserQuestion`:
+     - Question: "Multiple servers match '{name}'. Which did you mean?"
+     - Options: one option per matching alias
    - No match → say: "No server found matching '{name}'. Available: [list from status]"
 
 4. **Check server state:**
@@ -118,9 +120,11 @@ Parse the first word after `/mcpflip` as the subcommand:
 3. **Read `~/.claude/mcpflip/servers.json`**
 
 4. **Check for existing alias:**
-   - If alias exists → ask: "A server named '{alias}' already exists ({existing command}). Overwrite it?"
-   - If user says no → stop
-   - If user says yes → proceed with overwrite
+   - If alias exists → use `AskUserQuestion`:
+     - Question: "A server named '{alias}' already exists ({existing command}). Overwrite it?"
+     - Options: `["Yes, overwrite", "No, keep existing"]`
+   - If "No, keep existing" → stop
+   - If "Yes, overwrite" → proceed
 
 5. **Add the entry:**
    ```json
@@ -148,34 +152,24 @@ Parse the first word after `/mcpflip` as the subcommand:
 
 4. **If none found** → say: "All your Claude Code MCPs are already in the gateway, or you have none configured."
 
-5. **Show the list** of MCPs available to migrate, with a clear explanation:
-   ```
-   Found X MCP servers in your Claude Code config:
+5. **Show the context, then use `AskUserQuestion` with `multiSelect: true`:**
+   - First display:
+     ```
+     Found X MCP servers in your Claude Code config.
 
-     1. <alias>   (<command> <args>)
-     2. <alias>   (<command> <args>)
-     ...
+     Migrating moves a server into mcpflip — tools only appear when you run /mcpflip activate <name>.
+     Servers you don't migrate stay in Claude Code's native config (always in context).
+     ```
+   - Then call `AskUserQuestion`:
+     - Question: "Which servers would you like to migrate to mcpflip?"
+     - Options: `["All servers"]` + one option per server: `"<alias>  (<command> <args>)"`
+     - multiSelect: true
+   - Populate options from actual entries read in step 1 — never hardcode names
 
-   Migrating a server moves it into mcpflip — tools only appear in context
-   when you explicitly run /mcpflip activate <name>.
-
-   Servers you don't migrate stay in Claude Code's native config and will
-   always be loaded into context at session startup.
-
-   Which would you like to migrate?
-     - Type "all" to migrate everything
-     - Type "none" to keep everything as-is
-     - Type names separated by commas to pick specific ones
-   ```
-   - Populate the list from actual entries read in step 1 — never hardcode names
-   - Wait for user response before proceeding
-
-6. **Parse the response:**
-   - `all` → select every server in the list
-   - `none` → stop: "No changes made."
-   - comma-separated names → match each against the list (case-insensitive)
-     - Unrecognised name → warn: "'{name}' not found in the list — skipping."
-   - Empty response → ask again
+6. **Parse the selection:**
+   - "All servers" selected (alone or with others) → migrate every server in the list
+   - Specific servers selected → migrate only those
+   - Nothing selected → say "No changes made." and stop
 
 7. **For each selected server:**
    - Add to servers.json with its alias and command
@@ -197,34 +191,32 @@ Parse the first word after `/mcpflip` as the subcommand:
 **Steps:**
 
 1. **Read `~/.claude/mcpflip/servers.json`**
-   - If it has entries, list them and ask:
+   - If it has entries, display the list:
      ```
      Found X servers in your mcpflip config:
        - <alias>  (<command> <args>)
-       - <alias>  (<command> <args>)
        ...
-
-     Migrate these back to Claude Code's native MCP config before uninstalling?
-     (If no, they will be permanently deleted with mcpflip.)
      ```
-   - Populate the list from actual entries in servers.json — never hardcode names
-   - Wait for user response before proceeding
-   - If yes → for each entry run: `claude mcp add -s user <alias> -- <command> [args...]`
+   - Then use `AskUserQuestion`:
+     - Question: "Migrate these servers back to Claude Code's native config before uninstalling? (If no, they will be permanently deleted.)"
+     - Options: `["Yes, migrate back", "No, delete them"]`
+   - If "Yes, migrate back" → for each entry run: `claude mcp add -s user <alias> -- <command> [args...]`
      - If any add fails → warn: "Could not restore '{alias}' — you may need to add it manually."
-   - If no → proceed without migrating
+   - If "No, delete them" → proceed without migrating
    - If servers.json is empty → skip this step
 
-2. **Show what will be removed and ask for confirmation:**
-   ```
-   This will permanently remove:
-     - mcpflip from Claude Code's MCP registry
-     - ~/.claude/mcpflip/  (gateway.js, SKILL.md, servers.json)
-     - ~/.claude/skills/mcpflip/  (skill symlink)
-
-   Proceed? (yes/no)
-   ```
-   - Do not proceed until user confirms with "yes"
-   - Any other response → say "Uninstall cancelled." and stop
+2. **Show what will be removed, then use `AskUserQuestion`:**
+   - Display:
+     ```
+     This will permanently remove:
+       - mcpflip from Claude Code's MCP registry
+       - ~/.claude/mcpflip/  (gateway.js, SKILL.md, servers.json)
+       - ~/.claude/skills/mcpflip/  (skill symlink)
+     ```
+   - Then call `AskUserQuestion`:
+     - Question: "Permanently remove mcpflip and all its files?"
+     - Options: `["Yes, uninstall", "No, cancel"]`
+   - If "No, cancel" → say "Uninstall cancelled." and stop
 
 3. **Run the following in order:**
    - `claude mcp remove mcpflip -s user`
@@ -271,3 +263,4 @@ servers.json: ~/.claude/mcpflip/servers.json
 - **Never remove from Claude Code config** without explicit user confirmation
 - **Always show gateway_status output** when a server name can't be matched
 - **Keep responses concise** — one confirmation line is enough for success cases
+- **AskUserQuestion fallback** — if `AskUserQuestion` is unavailable, ask the question as plain text and wait for the user's typed response before proceeding
