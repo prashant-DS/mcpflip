@@ -301,8 +301,8 @@ install.sh / install-remote.sh
     │
     ├── ln -sf  ~/.claude/mcpflip/SKILL.md → ~/.claude/skills/mcpflip/SKILL.md
     │
-    ├── claude mcp remove mcp-gateway -s user   (ignore errors)
-    └── claude mcp add -s user mcp-gateway -- node ~/.claude/mcpflip/gateway.js
+    ├── claude mcp remove mcpflip -s user   (ignore errors)
+    └── claude mcp add -s user mcpflip -- node ~/.claude/mcpflip/gateway.js
 ```
 
 The `-sf` flag on `ln` handles both existing symlinks and regular files at the target path.

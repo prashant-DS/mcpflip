@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ~/.claude/mcp-gateway/gateway.js
+// ~/.claude/mcpflip/gateway.js
 //
 // Generic MCP Gateway
 // - Pre-warms all configured servers at startup (handshake + tool fetch)
@@ -140,7 +140,7 @@ async function prewarmServer(alias) {
   await serverRequest(alias, 'initialize', {
     protocolVersion: '2024-11-05',
     capabilities: {},
-    clientInfo: { name: 'mcp-gateway', version: '1.0' },
+    clientInfo: { name: 'mcpflip', version: '1.0' },
   });
   sendToServer(alias, { jsonrpc: '2.0', method: 'notifications/initialized' });
 
@@ -199,7 +199,7 @@ serverRl.on('line', async (line) => {
       result: {
         protocolVersion: '2024-11-05',
         capabilities: { tools: { listChanged: true } },
-        serverInfo: { name: 'mcp-gateway', version: '1.0' },
+        serverInfo: { name: 'mcpflip', version: '1.0' },
       },
     });
   }

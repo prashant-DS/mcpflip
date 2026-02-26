@@ -28,13 +28,14 @@ SKILL_LINK="$SKILL_DIR/SKILL.md"
 ln -sf "$INSTALL_DIR/SKILL.md" "$SKILL_LINK"
 
 # Register MCP server (remove existing first to avoid duplicates)
-claude mcp remove mcp-gateway -s user 2>/dev/null || true
-claude mcp add -s user mcp-gateway -- node "$INSTALL_DIR/gateway.js"
+claude mcp remove mcpflip -s user 2>/dev/null || true
+claude mcp add -s user mcpflip -- node "$INSTALL_DIR/gateway.js"
 
 echo ""
 echo "mcpflip installed successfully."
 echo ""
 echo "Next steps:"
-echo "  1. Edit ~/.claude/mcpflip/servers.json to add your MCP servers"
-echo "  2. Restart Claude Code"
-echo "  3. Run /mcpflip help to get started"
+echo "  1. Restart Claude Code"
+echo "  2. Run /mcpflip setup  — to migrate your existing Claude Code MCPs"
+echo "  3. Restart Claude Code again"
+echo "  4. Run /mcpflip help to get started"
