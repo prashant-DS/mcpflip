@@ -6,34 +6,35 @@ MCP Gateway for Claude Code — pre-warms all configured MCP servers at startup 
 
 ## The problem
 
-Every MCP server registered with Claude Code injects its full tool list into context at session startup. With many servers, this burns thousands of tokens before you type a single character.
+Every MCP server registered with Claude Code injects its full tool list into context at session startup. With many servers, this burns thousands of tokens before you type a single character — and those tools sit in context for every message even if you never use them.
 
 ## How it works
 
-- All configured servers start and warm up at session init (handshake + tool fetch)
-- Tools are **not** injected into Claude's context yet
+- Gateway starts at session init and pre-warms all configured MCP servers (handshake + tool fetch)
+- Tools are **not** injected into Claude's context yet — only 3 gateway tools visible
 - You activate a server when you need it → tools appear natively via `notifications/tools/list_changed`
-- Deactivate when done → context clean again
+- Deactivate when done → context is clean again, server stays warm for instant re-activation
 
-## Setup
-
-**1. Copy files**
-```bash
-mkdir -p ~/.claude/mcpflip
-cp gateway.js servers.json SKILL.md ~/.claude/mcpflip/
-
-mkdir -p ~/.claude/skills/mcpflip
-ln -s ~/.claude/mcpflip/SKILL.md ~/.claude/skills/mcpflip/SKILL.md
+```
+session start     → 3 gateway tools in context, all servers pre-warmed silently
+/mcpflip activate chrome   → 26 native chrome tools injected instantly
+/mcpflip deactivate chrome → tools removed, context clean
 ```
 
-**2. Register the gateway**
+## Install
+
 ```bash
-claude mcp add -s user mcp-gateway -- node ~/.claude/mcpflip/gateway.js
+git clone https://github.com/pk8873444412/mcpflip.git
+cd mcpflip
+./install.sh
 ```
 
-**3. Configure your servers**
+Then restart Claude Code.
+
+## Configure your servers
 
 Edit `~/.claude/mcpflip/servers.json`:
+
 ```json
 {
   "chrome": {
@@ -47,28 +48,29 @@ Edit `~/.claude/mcpflip/servers.json`:
 }
 ```
 
-**4. Restart Claude Code**
+Restart Claude Code after any changes to this file.
 
 ## Usage
 
-```
-/mcpflip activate chrome      → inject 26 chrome tools into context
-/mcpflip deactivate chrome    → remove tools, context clean
-/mcpflip status               → see all servers and their state
-/mcpflip add github -- npx -y @modelcontextprotocol/server-github
-/mcpflip setup                → migrate existing Claude Code MCPs
-/mcpflip help                 → show all commands
-```
+| Command | Description |
+|---|---|
+| `/mcpflip activate <name>` | Inject server tools into context |
+| `/mcpflip deactivate <name>` | Remove server tools from context |
+| `/mcpflip status` | Show all servers and their state |
+| `/mcpflip add <alias> -- <command> [args]` | Add a new server |
+| `/mcpflip setup` | Migrate existing Claude Code MCPs |
+| `/mcpflip help` | Show command reference |
 
 ## Files
 
 | File | Purpose |
 |---|---|
 | `gateway.js` | MCP server — the gateway engine |
-| `servers.json` | Your MCP server config |
+| `servers.json` | Default server config (example only) |
 | `SKILL.md` | Claude Code skill for `/mcpflip` commands |
+| `install.sh` | One-command installer |
 
 ## Requirements
 
 - Node.js v20+
-- Claude Code
+- Claude Code with `claude` CLI available in PATH
