@@ -25,10 +25,7 @@ fi
 
 # Symlink SKILL.md into skills directory
 SKILL_LINK="$SKILL_DIR/SKILL.md"
-if [ -L "$SKILL_LINK" ]; then
-  rm "$SKILL_LINK"
-fi
-ln -s "$INSTALL_DIR/SKILL.md" "$SKILL_LINK"
+ln -sf "$INSTALL_DIR/SKILL.md" "$SKILL_LINK"
 
 # Register MCP server (remove existing first to avoid duplicates)
 claude mcp remove mcp-gateway -s user 2>/dev/null || true

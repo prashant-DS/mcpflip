@@ -24,11 +24,13 @@ session start     → 3 gateway tools in context, all servers pre-warmed silentl
 ## Install
 
 **Option 1 — curl (no clone needed):**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/prashant-DS/mcpflip/main/install-remote.sh | bash
 ```
 
 **Option 2 — clone:**
+
 ```bash
 git clone https://github.com/prashant-DS/mcpflip.git
 cd mcpflip && ./install.sh
@@ -57,24 +59,25 @@ Restart Claude Code after any changes to this file.
 
 ## Usage
 
-| Command | Description |
-|---|---|
-| `/mcpflip activate <name>` | Inject server tools into context |
-| `/mcpflip deactivate <name>` | Remove server tools from context |
-| `/mcpflip status` | Show all servers and their state |
-| `/mcpflip add <alias> -- <command> [args]` | Add a new server |
-| `/mcpflip setup` | Migrate existing Claude Code MCPs |
-| `/mcpflip help` | Show command reference |
+| Command                                    | Description                       |
+| ------------------------------------------ | --------------------------------- |
+| `/mcpflip activate <name>`                 | Inject server tools into context  |
+| `/mcpflip deactivate <name>`               | Remove server tools from context  |
+| `/mcpflip status`                          | Show all servers and their state  |
+| `/mcpflip add <alias> -- <command> [args]` | Add a new server                  |
+| `/mcpflip setup`                           | Migrate existing Claude Code MCPs |
+| `/mcpflip help`                            | Show command reference            |
 
 ## Files
 
-| File | Purpose |
-|---|---|
-| `gateway.js` | MCP server — the gateway engine |
-| `servers.json` | Default server config (example only) |
-| `SKILL.md` | Claude Code skill for `/mcpflip` commands — uses `disable-model-invocation: true` so Claude never auto-triggers these commands without explicit user intent |
-| `install.sh` | Install from local clone |
-| `install-remote.sh` | Install via curl (no clone needed) |
+| File                | Purpose                                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gateway.js`        | MCP server — the gateway engine                                                                                                                             |
+| `servers.json`      | Default server config (example only)                                                                                                                        |
+| `SKILL.md`          | Claude Code skill for `/mcpflip` commands — uses `disable-model-invocation: true` so Claude never auto-triggers these commands without explicit user intent |
+| `install.sh`        | Install from local clone                                                                                                                                    |
+| `install-remote.sh` | Install via curl (no clone needed)                                                                                                                          |
+| `ARCHITECTURE.md`   | Technical deep-dive with diagrams                                                                                                                           |
 
 ## Requirements
 

@@ -131,6 +131,7 @@ async function prewarmServer(alias) {
     s.ready  = false;
     s.active = false;
     s.tools  = [];
+    s.error  = 'process exited unexpectedly';
     activeTools = buildActiveTools();
     toClient({ jsonrpc: '2.0', method: 'notifications/tools/list_changed' });
   });
@@ -239,6 +240,11 @@ serverRl.on('line', async (line) => {
       jsonrpc: '2.0', id: msg.id,
       error: { code: -32601, message: `Unknown tool: ${name}` },
     });
+  }
+
+  // ping
+  if (msg.method === 'ping') {
+    return toClient({ jsonrpc: '2.0', id: msg.id, result: {} });
   }
 
   toClient({ jsonrpc: '2.0', id: msg.id, error: { code: -32601, message: 'Method not found' } });
