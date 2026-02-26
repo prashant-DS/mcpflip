@@ -19,6 +19,7 @@ Parse the first word after `/mcpflip` as the subcommand:
 | `status` | Show all servers and their state |
 | `add` | Add a new server to the gateway |
 | `setup` | Migrate Claude Code MCPs into the gateway |
+| `update` | Update gateway.js and SKILL.md to latest version |
 | `uninstall` | Remove mcpflip completely |
 | `help` | Show command reference |
 | *(nothing)* | Show help |
@@ -38,7 +39,7 @@ Parse the first word after `/mcpflip` as the subcommand:
    - If no name provided → ask: "Which server would you like to activate? Run `/mcpflip status` to see available servers."
    - Do not proceed until you have a name
 
-2. **Call `gateway_status`** to get the current server list and states
+2. **Call `mcpflip_status`** to get the current server list and states
 
 3. **Match the name** (case-insensitive, partial match):
    - Exact match → use it
@@ -53,7 +54,7 @@ Parse the first word after `/mcpflip` as the subcommand:
    - Not ready (still warming up) → say: "'{alias}' is still warming up. Try again in a moment."
    - Error state → say: "'{alias}' failed to start: {error}. Check your servers.json config."
 
-5. **Call `gateway_activate`** with the resolved alias
+5. **Call `mcpflip_activate`** with the resolved alias
 
 6. **Report:** "Activated '{alias}' — X tools are now in context."
 
@@ -68,17 +69,17 @@ Parse the first word after `/mcpflip` as the subcommand:
 **Steps:**
 
 1. **Extract server name** from the argument after `deactivate`
-   - If no name provided → call `gateway_status`, then ask: "Which active server would you like to deactivate?"
+   - If no name provided → call `mcpflip_status`, then ask: "Which active server would you like to deactivate?"
    - Do not proceed until you have a name
 
-2. **Call `gateway_status`** to get active servers
+2. **Call `mcpflip_status`** to get active servers
 
 3. **Match the name** against active servers only:
    - Match found → proceed
    - No match but server exists (just not active) → say: "'{name}' is not currently active."
    - No match at all → say: "No active server matching '{name}'. Run `/mcpflip status` to see what's active."
 
-4. **Call `gateway_deactivate`** with resolved alias
+4. **Call `mcpflip_deactivate`** with resolved alias
 
 5. **Report:** "Deactivated '{alias}' — tools removed from context. Server stays warm for instant re-activation."
 
@@ -92,7 +93,7 @@ Parse the first word after `/mcpflip` as the subcommand:
 
 **Steps:**
 
-1. Call `gateway_status`
+1. Call `mcpflip_status`
 2. Display result clearly
 3. If no servers configured → say: "No servers configured. Run `/mcpflip setup` to migrate existing MCPs or `/mcpflip add` to add one."
 
@@ -182,6 +183,29 @@ Parse the first word after `/mcpflip` as the subcommand:
 
 ---
 
+## update
+
+**Purpose:** Update `gateway.js` and `SKILL.md` to the latest version from GitHub. Never touches `servers.json`.
+
+**Input:** `/mcpflip update`
+
+**Steps:**
+
+1. **Run the following commands:**
+   - `curl -fsSL https://raw.githubusercontent.com/prashant-DS/mcpflip/main/gateway.js -o ~/.claude/mcpflip/gateway.js`
+   - `curl -fsSL https://raw.githubusercontent.com/prashant-DS/mcpflip/main/SKILL.md -o ~/.claude/mcpflip/SKILL.md`
+   - `curl -fsSL https://raw.githubusercontent.com/prashant-DS/mcpflip/main/CHANGELOG.md -o /tmp/mcpflip-changelog.md`
+
+2. **If any command fails:**
+   - Report: "Update failed — could not reach GitHub. Check your connection and try again."
+   - Stop
+
+3. **Read `/tmp/mcpflip-changelog.md`** and display the top entry (everything from the first `## [` heading down to, but not including, the second `## [` heading).
+
+4. **Report:** "mcpflip updated. Restart Claude Code to apply changes."
+
+---
+
 ## uninstall
 
 **Purpose:** Remove mcpflip completely from the system.
@@ -242,6 +266,7 @@ Commands:
   /mcpflip status                               Show all servers and their state
   /mcpflip add <alias> -- <command> [args]      Add a new server to the gateway
   /mcpflip setup                                Migrate Claude Code MCPs into gateway
+  /mcpflip update                               Update to latest version
   /mcpflip uninstall                            Remove mcpflip completely
   /mcpflip help                                 Show this reference
 
@@ -261,6 +286,6 @@ servers.json: ~/.claude/mcpflip/servers.json
 - **Never proceed when input is ambiguous** — always ask first
 - **Never edit files without confirming** with the user when destructive (overwrite, remove)
 - **Never remove from Claude Code config** without explicit user confirmation
-- **Always show gateway_status output** when a server name can't be matched
+- **Always show mcpflip_status output** when a server name can't be matched
 - **Keep responses concise** — one confirmation line is enough for success cases
 - **AskUserQuestion fallback** — if `AskUserQuestion` is unavailable, ask the question as plain text and wait for the user's typed response before proceeding

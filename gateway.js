@@ -7,7 +7,7 @@
 // - On activate: injects that server's tools via list_changed
 // - On deactivate: removes tools, context clean again
 //
-// Always-visible tools (3): gateway_activate, gateway_deactivate, gateway_status
+// Always-visible tools (3): mcpflip_activate, mcpflip_deactivate, mcpflip_status
 // Add new servers by editing servers.json — no code changes needed
 
 const { spawn } = require('child_process');
@@ -30,7 +30,7 @@ const servers = {};
 
 const GATEWAY_TOOLS = [
   {
-    name: 'gateway_activate',
+    name: 'mcpflip_activate',
     description:
       'Activate an MCP server and inject its tools into context. ' +
       'Available servers: ' + Object.keys(CONFIG).join(', ') + '. ' +
@@ -44,7 +44,7 @@ const GATEWAY_TOOLS = [
     },
   },
   {
-    name: 'gateway_deactivate',
+    name: 'mcpflip_deactivate',
     description:
       'Deactivate an MCP server and remove its tools from context. ' +
       'Only call this when explicitly instructed by the user via /deactivate.',
@@ -57,7 +57,7 @@ const GATEWAY_TOOLS = [
     },
   },
   {
-    name: 'gateway_status',
+    name: 'mcpflip_status',
     description: 'List all configured servers and their current status (active / ready / error).',
     inputSchema: { type: 'object', properties: {}, required: [] },
   },
@@ -154,7 +154,7 @@ async function prewarmServer(alias) {
 
 function activate(alias) {
   const s = servers[alias];
-  if (!s)        return `Unknown server "${alias}". Run gateway_status to see available servers.`;
+  if (!s)        return `Unknown server "${alias}". Run mcpflip_status to see available servers.`;
   if (!s.ready)  return `Server "${alias}" is not ready yet — still warming up or failed.`;
   if (s.active)  return `Server "${alias}" is already active (${s.tools.length} tools in context).`;
   s.active    = true;
@@ -215,9 +215,9 @@ serverRl.on('line', async (line) => {
     const reply = (text) =>
       toClient({ jsonrpc: '2.0', id: msg.id, result: { content: [{ type: 'text', text }] } });
 
-    if (name === 'gateway_activate')   return reply(activate(args.name));
-    if (name === 'gateway_deactivate') return reply(deactivate(args.name));
-    if (name === 'gateway_status')     return reply(status());
+    if (name === 'mcpflip_activate')   return reply(activate(args.name));
+    if (name === 'mcpflip_deactivate') return reply(deactivate(args.name));
+    if (name === 'mcpflip_status')     return reply(status());
 
     // Proxy to whichever active server owns this tool
     const alias = Object.keys(servers).find(a =>

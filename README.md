@@ -64,6 +64,7 @@ Restart Claude Code after any changes to this file.
 | `/mcpflip status`                          | Show all servers and their state  |
 | `/mcpflip add <alias> -- <command> [args]` | Add a new server                  |
 | `/mcpflip setup`                           | Migrate existing Claude Code MCPs |
+| `/mcpflip update`                          | Update to latest version          |
 | `/mcpflip uninstall`                       | Remove mcpflip completely         |
 | `/mcpflip help`                            | Show command reference            |
 
@@ -77,6 +78,7 @@ Restart Claude Code after any changes to this file.
 | `install.sh`        | Install from local clone                                                                                                                                    |
 | `install-remote.sh` | Install via curl (no clone needed)                                                                                                                          |
 | `ARCHITECTURE.md`   | Technical deep-dive with diagrams                                                                                                                           |
+| `CHANGELOG.md`      | Version history — displayed after `/mcpflip update`                                                                                                        |
 
 ## Requirements
 

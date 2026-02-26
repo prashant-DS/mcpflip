@@ -15,7 +15,7 @@ mcpflip sits between Claude Code and all your MCP servers as a **multiplexing ga
 │                          Claude Code                                 │
 │                                                                      │
 │  Sees only:                                                          │
-│    gateway_activate, gateway_deactivate, gateway_status              │
+│    mcpflip_activate, mcpflip_deactivate, mcpflip_status              │
 │    + tools from any ACTIVE servers                                   │
 └──────────────────────┬───────────────────────────────────────────────┘
                        │  stdio (JSON-RPC over stdin/stdout)
@@ -144,7 +144,7 @@ All servers pre-warm concurrently via `Promise.allSettled`. Failures are caught 
 ```
 Claude Code              gateway.js
     │                        │
-    │── tools/call ─────────▶│  { name: "gateway_activate", arguments: { name: "<server>" } }
+    │── tools/call ─────────▶│  { name: "mcpflip_activate", arguments: { name: "<server>" } }
     │                        │
     │                        │  1. Set <server>.active = true
     │                        │  2. Rebuild activeTools = GATEWAY_TOOLS + <server>.tools
@@ -184,7 +184,7 @@ The gateway acts as a transparent proxy. Claude Code never knows it's talking to
 ```
 Claude Code              gateway.js
     │                        │
-    │── tools/call ─────────▶│  { name: "gateway_deactivate", arguments: { name: "<server>" } }
+    │── tools/call ─────────▶│  { name: "mcpflip_deactivate", arguments: { name: "<server>" } }
     │                        │
     │                        │  1. Set <server>.active = false
     │                        │  2. Rebuild activeTools = GATEWAY_TOOLS only
@@ -323,7 +323,7 @@ User types:           /mcpflip activate <name>
                            │
 Claude Code reads:    SKILL.md (the skill prompt)
                            │
-Claude decides:       Call gateway_activate({ name: "<name>" })
+Claude decides:       Call mcpflip_activate({ name: "<name>" })
                            │
 gateway.js handles:   activate("<name>") → sets active, sends list_changed
                            │
