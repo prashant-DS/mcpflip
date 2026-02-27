@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-02-27
+
+### Fixed
+- Environment variables (e.g. `$MY_TOKEN`) in `servers.json` args are now expanded at spawn time instead of passed as literal strings
+
+---
+
 ## 2025-02-26
 
 ### Added

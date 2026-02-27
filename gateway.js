@@ -109,7 +109,10 @@ async function prewarmServer(alias) {
   const s   = { process: null, tools: [], nextId: 1, pending: {}, ready: false, active: false };
   servers[alias] = s;
 
-  const proc = spawn(cfg.command, cfg.args, { stdio: ['pipe', 'pipe', 'pipe'] });
+  const expandedArgs = (cfg.args || []).map(arg =>
+    arg.replace(/\$\{?([A-Z_][A-Z0-9_]*)\}?/g, (_, name) => process.env[name] ?? '')
+  );
+  const proc = spawn(cfg.command, expandedArgs, { stdio: ['pipe', 'pipe', 'pipe'] });
   s.process = proc;
   proc.stderr.on('data', () => {}); // suppress npx noise
 
